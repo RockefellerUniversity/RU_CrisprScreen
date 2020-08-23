@@ -1,0 +1,8 @@
+Description:
+  CourseName: Introduction to Crispr Screen
+  OverviewRmd: CourseOverview.Rmd
+Presentations:
+  titles: Session1
+  PresRmd: crisprscreen.Rmd
+  PresOverviewRmd: crisprscreen_session1.Rmd
+  Exercises: Test.Rmd
