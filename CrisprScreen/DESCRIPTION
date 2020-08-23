@@ -1,7 +1,7 @@
 Package: CrisprScreen
 Type: Package
 Title: Introduction to Crispr Screening in R and Biconductor.
-Version: 0.1.4
+Version: 0.1.1
 Author: BRC.
 Maintainer: Thomas Carroll <tc.infomatics@gmail>
 Description: More about what it does (maybe more than one line)
