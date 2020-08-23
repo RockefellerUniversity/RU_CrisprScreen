@@ -1,5 +1,5 @@
 ---
-title: "Aligned data In Bioconductor <html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html>"
+title: "CrispR screen analysis using R and Bioconductor <html><div style='float:left'></div><hr color='#EB811B' size=1px width=796px></html>"
 author: "Rockefeller University, Bioinformatics Resource Centre"
 date: "http://rockefelleruniversity.github.io/Bioconductor_Introduction/"
 output: 
@@ -24,6 +24,468 @@ params:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 AsSlides <- TRUE
+```
+
+
+
+
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides != "yes"){
+  cat("# Crispr Screenining analysis in R
+
+---
+"    
+  )
+  
+}
+
+```
+
+## Highthroughput Crispr Screening 
+
+---
+## Analysis of Crispr screens
+
+
+---
+## Tools for analysis
+
+[PinAPL-Py: A comprehensive web-application for the analysis of CRISPR/Cas9 screens](https://www.nature.com/articles/s41598-017-16193-9)
+
+[MAGeCK enables robust identification of essential genes from genome-scale CRISPR/Cas9 knockout screens](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-014-0554-4)
+
+---
+## PinAPL-Py
+
+
+SRP123360
+
+
+---
+## Download the data
+
+https://github.com/LewisLabUCSD/PinAPL-Py.
+
+https://github.com/LewisLabUCSD/PinAPL-Py/archive/master.zip
+
+```{r downloadFile}
+download.file("https://github.com/LewisLabUCSD/PinAPL-Py/archive/master.zip","pieappleData.zip")
+unzip("pieappleData.zip")
+```
+
+
+---
+## Quality control of FastQ
+
+Once we have downloaded the raw fastQ data (either from their Gtihub or from SRA) we can use the [ShortRead package](https://bioconductor.org/packages/release/bioc/html/ShortRead.html) to review our sequence data quality.
+
+We have reviewed how to work with raw sequencing data in the [**FastQ in Bioconductor** session.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/FastQInBioconductor.html#1)
+
+First we load the [ShortRead library.](https://bioconductor.org/packages/release/bioc/html/ShortRead.html)
+
+
+```{r shortreada,include=FALSE}
+library(ShortRead)
+
+```
+
+```{r shortread, warning=F, message=F}
+library(ShortRead)
+```
+
+---
+## Working with FQs from Crispr screen.
+
+First we will review the raw sequencing reads using functions in the [ShortRead package.](https://bioconductor.org/packages/release/bioc/html/ShortRead.html) This is similar to our QC we performed for RNAseq and ChIPseq. 
+
+We do not need to review all reads in the file to can gain an understanding of data quality. We can simply review a subsample of the reads and save ourselves some time and memory.
+
+**Remember** when we subsample we retrieve random reads from across the entire fastQ file. This is important as fastQ files are often ordered by their position on the sequencer.
+
+---
+## Crispr screen FQs.
+
+We can subsample from a fastQ file using functions in **ShortRead** package.
+
+Here we use the [**FastqSampler** and **yield** function](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/FastQInBioconductor.html#41) to randomly sample a defined number of reads from a fastQ file. Here we subsample 1 million reads.
+
+```{r crsiprRep1Reads,echo=T,eval=T}
+fqSample <- FastqSampler("PinAPL-Py-master/Data/Tox-A_R01_98_S2_L008_R1_001_x.fastq.gz",n=10^6)
+fastq <- yield(fqSample)
+```
+
+---
+## Working with raw ChIPseq data
+
+The resulting object is a [ShortReadQ object](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/FastQInBioconductor.html#10) showing information on the number of cycles, base pairs in reads, and number of reads in memory.
+
+```{r mycRep1ReadsShortReadQ}
+fastq
+```
+
+---
+
+## Raw ChIPseq data QC
+
+If we wished, we can assess information from the fastQ file using our [familiar accessor functions.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/FastQInBioconductor.html#15)
+
+* **sread()** - Retrieve sequence of reads.
+* **quality()** - Retrieve quality of reads as ASCI scores.
+* **id()** - Retrieve IDs of reads.
+
+
+
+```{r mycRep1ReadsAccessor}
+readSequences <- sread(fastq)
+readQuality <- quality(fastq)
+readIDs <- id(fastq)
+readSequences
+```
+
+---
+## Quality with raw ChIPseq data
+
+We can check some simple quality metrics for our subsampled fastQ data.
+
+First, we can review the overall reads' quality scores.
+
+We use the [**alphabetScore()** function with our read's qualitys](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/FastQInBioconductor.html#28) to retrieve the sum quality for every read from our subsample.
+
+
+
+```{r mycRep1ReadsQScores}
+readQuality <- quality(fastq)
+readQualities <- alphabetScore(readQuality)
+readQualities[1:10]
+```
+
+---
+
+## Quality with raw ChIPseq data
+
+We can then produce a histogram of quality scores to get a better understanding of the distribution of scores.
+
+```{r mycRep1ReadsQScoresPlot,fig.height=3,fig.width=8}
+library(ggplot2)
+toPlot <- data.frame(ReadQ=readQualities)
+ggplot(toPlot,aes(x=ReadQ))+geom_histogram()+theme_minimal()
+```
+
+
+---
+
+## Base frequency with raw ChIPseq data
+
+We can review the occurrence of DNA bases within reads and well as the occurrence of DNA bases across sequencing cycles using the [**alphabetFrequency()**](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/FastQInBioconductor.html#18) and [**alphabetByCycle()**](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/FastQInBioconductor.html#30) functions respectively.
+
+Here we check the overall frequency of **A, G, C, T and N (unknown bases)** in our sequence reads.
+
+```{r mycRep1ReadsAlpFreq}
+readSequences <- sread(fastq)
+readSequences_AlpFreq <- alphabetFrequency(readSequences)
+readSequences_AlpFreq[1:3,]
+```
+
+
+---
+
+## Base frequency with raw ChIPseq data
+
+Once we have the frequency of DNA bases in our sequence reads we can retrieve the sum across all reads.
+
+```{r mycRep1ReadsAlpFreqSum}
+summed__AlpFreq  <- colSums(readSequences_AlpFreq)
+summed__AlpFreq[c("A","C","G","T","N")]
+```
+
+---
+
+## Assess by cycle with raw ChIPseq data
+
+We can review DNA base occurrence by cycle using the [**alphabetByCycle()** function.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/FastQInBioconductor.html#30)
+
+```{r mycRep1ReadsAlpByCycle}
+readSequences_AlpbyCycle <- alphabetByCycle(readSequences)
+readSequences_AlpbyCycle[1:4,1:10]
+```
+
+---
+
+## Assess by cycle with raw ChIPseq data
+
+We often plot this to visualise the base occurrence over cycles to observe any bias.
+First we arrange the base frequency into a data frame.
+
+```{r mycRep1ReadsAlpByCyclePlot}
+AFreq <- readSequences_AlpbyCycle["A",]
+CFreq <- readSequences_AlpbyCycle["C",]
+GFreq <- readSequences_AlpbyCycle["G",]
+TFreq <- readSequences_AlpbyCycle["T",]
+toPlot <- data.frame(Count=c(AFreq,CFreq,GFreq,TFreq),
+                     Cycle=rep(1:max(width(readSequences)),4),
+                     Base=rep(c("A","C","G","T"),each=max(width(readSequences))))
+
+```
+
+---
+
+## Assess by cycle with raw ChIPseq data
+
+Now we can plot the frequencies using ggplot2
+
+```{r mycRep1ReadsAlpByCyclePlot2,fig.height=4,fig.width=8}
+
+ggplot(toPlot,aes(y=Count,x=Cycle,colour=Base))+geom_line()+
+  theme_bw()
+```
+
+---
+
+## Assess by cycle with raw ChIPseq data
+
+We can also assess mean read quality over cycles. This will allow us to identify whether there are any isses with quality dropping off over time.
+
+For this we use the [**as(*read_quality*,"matrix")**](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/FastQInBioconductor.html#29) function first to translate our ASCI quality scores to numeric quality scores.
+
+```{r mycRep1ReadsQByCycle}
+qualAsMatrix <- as(readQuality,"matrix")
+qualAsMatrix[1:2,]
+```
+
+---
+
+## Assess by cycle with raw ChIPseq data
+
+We can now [visualise qualities across cycles using a boxplot.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/exercises/answers/fastq_answers.html)
+
+```{r mycRep1ReadsQByCyclePlotfig.width=8,fig.height=4}
+toPlot <- colMeans(qualAsMatrix)
+plot(toPlot)
+```
+
+---
+
+## Assess by cycle with raw ChIPseq data
+
+In this case the distribution of reads quality scores and read qualities over time look okay. We will often want to access fastQ samples together to see if any samples stick out by these metrics.
+
+Here we observed a second population of low quality scores so will remove some reads with low quality scores and high unknown bases.
+
+
+
+---
+```{r, results='asis',include=TRUE,echo=FALSE}
+if(params$isSlides == "yes"){
+  cat("class: inverse, center, middle
+
+# Aligning data
+
+<html><div style='float:left'></div><hr color='#EB811B' size=1px width=720px></html> 
+
+---
+"    
+  )
+}else{
+  cat("# Aligning data
+
+---
+"    
+  )
+  
+}
+
+```
+
+
+## Aligning ChIPseq reads
+
+Following assessment of read quality and any read filtering we applied, we will want to align our reads to the genome so as to identify any genomic locations showing enrichment for aligned reads above background.
+
+Since ChIPseq reads will align continously against our reference genome we can use [our genomic aligners we have seen in previous sessions.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/r_course/presentations/slides/AlignmentInBioconductor.html#7) The resulting BAM file will contain aligned sequence reads for use in further analysis.
+
+<div align="center">
+<img src="imgs/sam2.png" alt="igv" height="200" width="600">
+</div>
+
+---
+## Creating a sgRNA reference
+
+First we need to retrieve the sequence information for the sgRNA guides of interest in [FASTA format](https://rockefelleruniversity.github.io/Genomic_Data/presentations/slides/GenomicsData.html#9)
+
+We can read the sequences of our sgRNA probes from the TSV file downloaded from the Github page [here](http://pinapl-py.ucsd.edu/example-data).
+
+```{r fa1}
+download.file("http://pinapl-py.ucsd.edu/example-data","TestData.zip")
+unzip("TestData.zip")
+```
+
+---
+## Creating a sgRNA reference
+
+First we need to retrieve the sequence information for the sgRNA guides of interest in [FASTA format](https://rockefelleruniversity.github.io/Genomic_Data/presentations/slides/GenomicsData.html#9)
+
+We can read the sequences of our sgRNA probes from the TSV file downloaded from the Github page [here](http://pinapl-py.ucsd.edu/example-data).
+
+```{r fa2}
+GeCKO <- read.delim("PinAPL-py_demo_data/GeCKOv21_Human.tsv")
+GeCKO[1:2,]
+```
+
+
+---
+## Creating a sgRNA fasta
+
+Now we can create a [**DNAStringSet** object from the retrieved sequences](https://rockefelleruniversity.github.io/Bioconductor_Introduction/r_course/presentations/slides/SequencesInBioconductor.html#17) as we have done for full chromosome sequences.
+
+```{r fa3}
+require(Biostrings)
+sgRNAs <- DNAStringSet(GeCKO$seq)
+names(sgRNAs) <- GeCKO$UID
+```
+
+
+---
+## Creating a sgRNA fasta
+
+
+Now we have a **DNAStringSet** object we can use the [**writeXStringSet** to create our FASTA file of sequences to align to.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/SequencesInBioconductor.html#22)
+
+```{r fa4}
+writeXStringSet(sgRNAs,
+                file="GeCKO.fa")
+```
+
+http://pinapl-py.ucsd.edu/example-results
+
+
+---
+## Creating an Rsubread index 
+
+We will be aligning using the **subjunc** algorithm from the authors of subread. We can therefore use the **Rsubread** package. Before we attempt to align our fastq files, we will need to first build an index from our reference genome using the **buildindex()** function.
+
+The [**buildindex()** function simply takes the parameters of our desired index name and the FASTA file to build index from.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/r_course/presentations/slides/AlignmentInBioconductor.html#14)
+
+
+Luckily we did this for RNAseq, so hopefully you will already have a built index. 
+```{r, echo=TRUE,eval=TRUE}
+library(Rsubread)
+buildindex("GeCKO","GeCKO.fa", 
+           indexSplit=FALSE)
+
+```
+
+
+---
+## Rsubread ChIPseq alignment
+
+We can align our raw sequence data in fastQ format to the new FASTA file of our mm10 genome sequence using the **Rsubread** package. Specifically we will be using the **align** function as this utilizes the subread genomic alignment algorithm. 
+
+The [**align()** function accepts arguments for the index to align to, the fastQ to align, the name of output BAM, the mode of alignment (rna or dna) and the phredOffset.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/AlignmentInBioconductor.html#15)
+
+
+```{r, echo=TRUE, eval=TRUE}
+myFQs <- "PinAPL-py_demo_data/Control_R1_S14_L008_R1_001_x.fastq.gz"
+myMapped <- align("GeCKO",myFQs,output_file = gsub(".fastq.gz",".bam",myFQs),
+                  nthreads=4,unique=TRUE,nBestLocations=1,type = "DNA")
+
+```
+
+---
+## Rsubread ChIPseq alignment
+
+```{r, echo=TRUE,eval=TRUE}
+
+myMapped 
+
+```
+
+---
+## Rsubread ChIPseq alignment
+
+We can align our raw sequence data in fastQ format to the new FASTA file of our mm10 genome sequence using the **Rsubread** package. Specifically we will be using the **align** function as this utilizes the subread genomic alignment algorithm. 
+
+The [**align()** function accepts arguments for the index to align to, the fastQ to align, the name of output BAM, the mode of alignment (rna or dna) and the phredOffset.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/AlignmentInBioconductor.html#15)
+
+
+```{r, echo=TRUE, eval=TRUE}
+myFQs <- "PinAPL-py_demo_data/Control_R1_S14_L008_R1_001_x.fastq.gz"
+myMapped <- align("GeCKO",myFQs,output_file = gsub(".fastq.gz",".bam",myFQs),
+                  nthreads=4,unique=TRUE,nBestLocations=1,type = "DNA",TH1 = 1)
+
+```
+
+---
+## Rsubread ChIPseq alignment
+
+```{r, echo=TRUE,eval=TRUE}
+
+myMapped 
+
+```
+
+
+
+---
+## Rsubread ChIPseq alignment
+
+We can align our raw sequence data in fastQ format to the new FASTA file of our mm10 genome sequence using the **Rsubread** package. Specifically we will be using the **align** function as this utilizes the subread genomic alignment algorithm. 
+
+The [**align()** function accepts arguments for the index to align to, the fastQ to align, the name of output BAM, the mode of alignment (rna or dna) and the phredOffset.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/AlignmentInBioconductor.html#15)
+
+
+```{r, echo=TRUE, eval=TRUE}
+myFQs <- "PinAPL-py_demo_data/Control_R1_S14_L008_R1_001_x.fastq.gz"
+myMapped <- align("GeCKO",myFQs,output_file = gsub(".fastq.gz",".bam",myFQs),
+                  nthreads=4,unique=TRUE,nBestLocations=1,type = "DNA",TH1 = 1,
+                  maxMismatches = 0,indels = 0)
+
+```
+
+---
+## Rsubread aligned data
+
+```{r, echo=TRUE,eval=TRUE}
+
+temp <- readGAlignments(gsub(".fastq.gz",".bam",myFQs))
+temp
+```
+
+
+---
+## Rsubread aligned data
+
+```{r, echo=TRUE,eval=TRUE}
+table(grepl("29S20M1S",temp@cigar))
+temp <- temp[grepl("29S20M1S",temp@cigar)]
+
+# temp data.frame(table(seqnames(temp[width(temp) == "20"])),row.names = "Var1")
+```
+
+---
+## Rsubread aligned data
+
+```{r, echo=TRUE,eval=TRUE}
+counts <- data.frame(table(seqnames(temp)),row.names = "Var1")
+counts <- data.frame(table(seqnames(temp[width(temp) == "20"])),row.names = "Var1")
+counts[1:2,,drop=FALSE]
+```
+
+---
+## Rsubread aligned data
+
+```{r, echo=TRUE,eval=TRUE}
+download.file("http://pinapl-py.ucsd.edu/run/download/example-run","Results.zip")
+unzip("Results.zip")
+```
+
+
+---
+## Rsubread aligned data
+
+```{r, echo=TRUE,eval=TRUE}
+ss <- read.delim("New_Example_1580342908_4/Analysis/01_Alignment_Results/ReadCounts_per_sgRNA/Control_1_GuideCounts.txt")
+new <- merge(ss,counts,by.x=1,by.y=0)
+plot(new$X0,new$Freq)
 ```
 
 ---
