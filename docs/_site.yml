@@ -1,0 +1,36 @@
+output_dir: '.'
+navbar:
+  title: Introduction to Crispr Screening in R and Biconductor.
+  left:
+  - text: Home
+    href: index.html
+  - text: Slides
+    menu:
+    - text: Session1
+      menu:
+      - text: Slide
+        href: presentations/slides/crisprscreen.html
+      - text: Single Page
+        href: presentations/singlepage/crisprscreen.html
+      - text: Code
+        href: presentations/r_code/crisprscreen.R
+  - text: Exercises
+    menu:
+    - text: Test
+      menu:
+      - text: Exercise
+        href: exercises/exercises/Test_exercise.html
+      - text: Solution
+        href: exercises/answers/Test_answers.html
+  right:
+  - text: Getting help!
+    href: https://github.com//RockefellerUniversity/RU_CrisprScreen/issues
+  - href: https://twitter.com/Rockefeller_BRC
+    icon: ion-social-twitter
+output:
+  html_document:
+    toc: yes
+    theme: cosmo
+    toc_float: yes
+    highlight: textmate
+
