@@ -1,0 +1,83 @@
+---
+title: "CrisprScreen in Bioconductor exercises"
+author: "Rockefeller University, Bioinformatics Resource Centre"
+date: "https://rockefelleruniversity.github.io/Bioconductor_Introduction/"
+output: 
+  html_document:
+    number_sections: false  ## if you want number sections at each table header
+    theme: united  # many options for theme, this one is my favorite.
+    highlight: tango  # specifies the syntax highlighting style
+params:
+  toMessage: false    
+---
+
+```{r, setup,include=FALSE}
+toMessage <- ifelse(!is.null(params$toMessage),params$toMessage,FALSE)
+message(toMessage)
+toMessage <- TRUE
+```
+
+
+*1 In this exercise set we will re-analyse the test data from **pinapl-py**. If you havent already downlaoded it then download now and unzip them
+
+
+```{r downloadFile,eval=F, echo=toMessage}
+download.file("https://github.com/LewisLabUCSD/PinAPL-Py/archive/master.zip","pieappleData.zip")
+unzip("pieappleData.zip")
+download.file("http://pinapl-py.ucsd.edu/example-data","TestData.zip")
+unzip("TestData.zip")
+download.file("http://pinapl-py.ucsd.edu/run/download/example-run","Results.zip")
+unzip("Results.zip")
+```
+
+
+
+*2 Create an Rsubread index of sgRNA library
+
+
+```{r downloadFilez,eval=F, echo=toMessage}
+myData <- read.delim("PinAPL-py_demo_data/GeCKOv21_Human.tsv",sep="\t")
+require(Biostrings)
+sgRNALib <- DNAStringSet(myData$seq)
+names(sgRNALib) <- myData$UID
+require(Rsubread)
+writeXStringSet(sgRNALib,"sgRNALib.fa")
+buildindex("sgRNALib",reference = "sgRNALib.fa")
+```
+
+
+*3 Create a count matrix of sgRNAs across all samples.
+
+
+```{r downloadFilex,eval=F, echo=toMessage}
+
+myFQs <- c("PinAPL-py_demo_data/Control_R1_S14_L008_R1_001_x.fastq.gz", "PinAPL-py_demo_data/Control_R2_S15_L008_R1_001_x.fastq.gz", "PinAPL-py_demo_data/ToxA_R1_98_S2_L008_R1_001_x.fastq.gz", "PinAPL-py_demo_data/ToxA_R2_S2_L005_R1_001_x.fastq.gz", "PinAPL-py_demo_data/ToxB_R1_98_S4_L008_R1_001_x.fastq.gz", "PinAPL-py_demo_data/ToxB_R2_S4_L005_R1_001_x.fastq.gz")
+require(GenomicAlignments)
+counts <- list()
+stats <- list()
+
+for(f in 1:length(myFQs)){
+  stats[[f]] <- align("sgRNALib",myFQs[f],output_file = gsub(".fastq.gz",".bam",myFQs[f]),
+            nthreads=2,unique=TRUE,nBestLocations=1,type = "DNA",TH1 = 1,maxMismatches = 0,indels = 0)
+  temp <- readGAlignments(gsub(".fastq.gz",".bam",myFQs[f]))
+  counts[[f]] <- data.frame(table(seqnames(temp[width(temp) == "20"])),row.names = "Var1")
+}
+myRes <- do.call(cbind,counts)
+
+```
+
+
+*4 Identify sgRNAs enriched in ToxA versus Control
+
+```{r downloadFilel,eval=F, echo=toMessage}
+
+colnames(myRes) <- c("Control_1","Control_2","ToxA_1","ToxA_2","ToxB_1","ToxB_2")
+toUseAsCol <- DataFrame(Group=factor(c("Control","Control","ToxA","ToxA","ToxB","ToxB"),levels = c("Control","ToxA","ToxB")),row.names = colnames(myRes))
+require(DESeq2)
+dds <- DESeqDataSetFromMatrix(myRes,colData = toUseAsCol,design = ~Group)
+dds <- DESeq(dds)
+ToxAvsControl <- results(dds,contrast=c("Group","ToxA","Control"))
+ToxAvsControl[order(ToxAvsControl$pvalue),]
+
+
+```
