@@ -32,37 +32,62 @@ class: center, middle, inverse, title-slide
 
 
 
-## Highthroughput Crispr Screening 
+## High-throughput Crispr Screening 
+
+High-throughput Crispr or shRNA screening provides a method to simultaneously assess the functional roles of 1000s genes under specific conditions/perturbations.
+
+
+![](imgs/F1.large.jpg)
 
 ---
 ## Analysis of Crispr screens
 
+We can take advantage of high throughput sequencing to assess the abundance of cells containing each CrispR/shRNA. 
+
+By comparing the abundance of CrispR/shRNA in test conditions versus control conditions we can assess which genes have a functional role related to the test condition. i.e. If a set  sgRNA guides targeting are enriched after drug treatment, that gene is important to susceptiabilty to the drug.
 
 ---
 ## Tools for analysis
+
+There are many tools available to analyse sgRNA/shRNA screens. These incude the popular PinAPL-Py and MAGeCK toolsets.
 
 [PinAPL-Py: A comprehensive web-application for the analysis of CRISPR/Cas9 screens](https://www.nature.com/articles/s41598-017-16193-9)
 
 [MAGeCK enables robust identification of essential genes from genome-scale CRISPR/Cas9 knockout screens](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-014-0554-4)
 
 ---
+## Tools in R.
+
+Much of the tools used in these toolsets are implemented within R (PinAPL=Py uses Bowtie, MAGeCK uses very similar normalisations to DESeq.
+
+We can therefore use some of the skills we have learnt to deal with other high throughput sequencing data and then apply it to identifying enriched sgRNA/shRNAs in our test conditions versus control.
+
+
+---
 ## PinAPL-Py
 
+[PinAPL-Py](https://www.nature.com/articles/s41598-017-16193-9) offers a python/command line and web GUI interface to sgRNA screen analysis.
+ 
+We will follow some of their methods and use their test datasets in our upcoming analysis.
 
-SRP123360
+You can find the GUI and test datasets available [here.](http://pinapl-py.ucsd.edu)
 
 
 ---
 ## Download the data
 
-https://github.com/LewisLabUCSD/PinAPL-Py.
+We will use their test data and results data from this GUI. 
 
-https://github.com/LewisLabUCSD/PinAPL-Py/archive/master.zip
+We can download this directly by using the download.file command
 
 
 ```r
 download.file("https://github.com/LewisLabUCSD/PinAPL-Py/archive/master.zip","pieappleData.zip")
 unzip("pieappleData.zip")
+download.file("http://pinapl-py.ucsd.edu/example-data","TestData.zip")
+unzip("TestData.zip")
+download.file("http://pinapl-py.ucsd.edu/run/download/example-run","Results.zip")
+unzip("Results.zip")
 ```
 
 
@@ -106,7 +131,7 @@ fastq &lt;- yield(fqSample)
 ```
 
 ---
-## Working with raw ChIPseq data
+## Working with Crispr fastQ
 
 The resulting object is a [ShortReadQ object](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/FastQInBioconductor.html#10) showing information on the number of cycles, base pairs in reads, and number of reads in memory.
 
@@ -122,7 +147,7 @@ fastq
 
 ---
 
-## Raw ChIPseq data QC
+## Working with Crispr fastQ
 
 If we wished, we can assess information from the fastQ file using our [familiar accessor functions.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/FastQInBioconductor.html#15)
 
@@ -157,7 +182,7 @@ readSequences
 ```
 
 ---
-## Quality with raw ChIPseq data
+## Working with Crispr fastQ
 
 We can check some simple quality metrics for our subsampled fastQ data.
 
@@ -180,7 +205,7 @@ readQualities[1:10]
 
 ---
 
-## Quality with raw ChIPseq data
+## Working with Crispr fastQ
 
 We can then produce a histogram of quality scores to get a better understanding of the distribution of scores.
 
@@ -200,7 +225,7 @@ ggplot(toPlot,aes(x=ReadQ))+geom_histogram()+theme_minimal()
 
 ---
 
-## Base frequency with raw ChIPseq data
+## Working with Crispr fastQ
 
 We can review the occurrence of DNA bases within reads and well as the occurrence of DNA bases across sequencing cycles using the [**alphabetFrequency()**](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/FastQInBioconductor.html#18) and [**alphabetByCycle()**](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/FastQInBioconductor.html#30) functions respectively.
 
@@ -223,7 +248,7 @@ readSequences_AlpFreq[1:3,]
 
 ---
 
-## Base frequency with raw ChIPseq data
+## Working with Crispr fastQ
 
 Once we have the frequency of DNA bases in our sequence reads we can retrieve the sum across all reads.
 
@@ -240,7 +265,7 @@ summed__AlpFreq[c("A","C","G","T","N")]
 
 ---
 
-## Assess by cycle with raw ChIPseq data
+## Working with Crispr fastQ
 
 We can review DNA base occurrence by cycle using the [**alphabetByCycle()** function.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/FastQInBioconductor.html#30)
 
@@ -261,7 +286,7 @@ readSequences_AlpbyCycle[1:4,1:10]
 
 ---
 
-## Assess by cycle with raw ChIPseq data
+## Working with Crispr fastQ
 
 We often plot this to visualise the base occurrence over cycles to observe any bias.
 First we arrange the base frequency into a data frame.
@@ -279,7 +304,7 @@ toPlot &lt;- data.frame(Count=c(AFreq,CFreq,GFreq,TFreq),
 
 ---
 
-## Assess by cycle with raw ChIPseq data
+## Working with Crispr fastQ
 
 Now we can plot the frequencies using ggplot2
 
@@ -293,7 +318,7 @@ ggplot(toPlot,aes(y=Count,x=Cycle,colour=Base))+geom_line()+
 
 ---
 
-## Assess by cycle with raw ChIPseq data
+## Assess by cycle with raw Crispr data
 
 We can also assess mean read quality over cycles. This will allow us to identify whether there are any isses with quality dropping off over time.
 
@@ -322,9 +347,9 @@ qualAsMatrix[1:2,]
 
 ---
 
-## Assess by cycle with raw ChIPseq data
+## Assess by cycle with raw Crispr data
 
-We can now [visualise qualities across cycles using a boxplot.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/exercises/answers/fastq_answers.html)
+We can now [visualise qualities across cycles using a lineplot.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/exercises/answers/fastq_answers.html)
 
 
 ```r
@@ -336,7 +361,7 @@ plot(toPlot)
 
 ---
 
-## Assess by cycle with raw ChIPseq data
+## Assess by cycle with raw Crispr data
 
 In this case the distribution of reads quality scores and read qualities over time look okay. We will often want to access fastQ samples together to see if any samples stick out by these metrics.
 
@@ -354,28 +379,16 @@ class: inverse, center, middle
 ---
 
 
-## Aligning ChIPseq reads
+## Aligning reads to sgRNA library
 
-Following assessment of read quality and any read filtering we applied, we will want to align our reads to the genome so as to identify any genomic locations showing enrichment for aligned reads above background.
+Following assessment of read quality and any read filtering we applied, we will want to align our reads to the sgRNA library so as to quantify sgRNA abundance in our samples.
 
-Since ChIPseq reads will align continously against our reference genome we can use [our genomic aligners we have seen in previous sessions.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/r_course/presentations/slides/AlignmentInBioconductor.html#7) The resulting BAM file will contain aligned sequence reads for use in further analysis.
+Since sgRNA screen reads will align continously against our sgRNA we can use [our genomic aligners we have seen in previous sessions.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/r_course/presentations/slides/AlignmentInBioconductor.html#7) The resulting BAM file will contain aligned sequence reads for use in further analysis.
 
 &lt;div align="center"&gt;
 &lt;img src="imgs/sam2.png" alt="igv" height="200" width="600"&gt;
 &lt;/div&gt;
 
----
-## Creating a sgRNA reference
-
-First we need to retrieve the sequence information for the sgRNA guides of interest in [FASTA format](https://rockefelleruniversity.github.io/Genomic_Data/presentations/slides/GenomicsData.html#9)
-
-We can read the sequences of our sgRNA probes from the TSV file downloaded from the Github page [here](http://pinapl-py.ucsd.edu/example-data).
-
-
-```r
-download.file("http://pinapl-py.ucsd.edu/example-data","TestData.zip")
-unzip("TestData.zip")
-```
 
 ---
 ## Creating a sgRNA reference
@@ -422,8 +435,6 @@ writeXStringSet(sgRNAs,
                 file="GeCKO.fa")
 ```
 
-http://pinapl-py.ucsd.edu/example-results
-
 
 ---
 ## Creating an Rsubread index 
@@ -433,7 +444,8 @@ We will be aligning using the **subjunc** algorithm from the authors of subread.
 The [**buildindex()** function simply takes the parameters of our desired index name and the FASTA file to build index from.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/r_course/presentations/slides/AlignmentInBioconductor.html#14)
 
 
-Luckily we did this for RNAseq, so hopefully you will already have a built index. 
+The index is quite small so we dont need to split index or worry about memory parameters.
+
 
 ```r
 library(Rsubread)
@@ -459,7 +471,7 @@ buildindex("GeCKO","GeCKO.fa",
 ## ||          Repeat threshold : 100 repeats                                    ||
 ## ||              Gapped index : no                                             ||
 ## ||                                                                            ||
-## ||       Free / total memory : 4.9GB / 6.8GB                                  ||
+## ||       Free / total memory : 5.1GB / 6.8GB                                  ||
 ## ||                                                                            ||
 ## ||               Input files : 1 file in total                                ||
 ## ||                             o GeCKO.fa                                     ||
@@ -487,7 +499,7 @@ buildindex("GeCKO","GeCKO.fa",
 ## ||  [ 90.0% finished ]                                                        ||
 ## ||  [ 100.0% finished ]                                                       ||
 ## ||                                                                            ||
-## ||                      Total running time: 0.2 minutes.                      ||
+## ||                      Total running time: 0.1 minutes.                      ||
 ## ||                    Index GeCKO was successfully built.                     ||
 ## ||                                                                            ||
 ## \\============================================================================//
@@ -495,9 +507,9 @@ buildindex("GeCKO","GeCKO.fa",
 
 
 ---
-## Rsubread ChIPseq alignment
+## Rsubread sgRNA alignment
 
-We can align our raw sequence data in fastQ format to the new FASTA file of our mm10 genome sequence using the **Rsubread** package. Specifically we will be using the **align** function as this utilizes the subread genomic alignment algorithm. 
+We can align our raw sequence data in fastQ format to the new FASTA file of sgRNA sequences using the **Rsubread** package. Specifically we will be using the **align** function as this utilizes the subread genomic alignment algorithm. 
 
 The [**align()** function accepts arguments for the index to align to, the fastQ to align, the name of output BAM, the mode of alignment (rna or dna) and the phredOffset.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/AlignmentInBioconductor.html#15)
 
@@ -538,7 +550,7 @@ myMapped &lt;- align("GeCKO",myFQs,output_file = gsub(".fastq.gz",".bam",myFQs),
 ## ||                                                                            ||
 ## \\============================================================================//
 ## 
-## //================= Running (24-Aug-2020 16:59:38, pid=6141) =================\\
+## //================= Running (25-Aug-2020 18:30:01, pid=6501) =================\\
 ## ||                                                                            ||
 ## || Check the input reads.                                                     ||
 ## || The input file contains base space reads.                                  ||
@@ -552,26 +564,25 @@ myMapped &lt;- align("GeCKO",myFQs,output_file = gsub(".fastq.gz",".bam",myFQs),
 ## || Load the 1-th index block...                                               ||
 ## || The index block has been loaded.                                           ||
 ## || Start read mapping in chunk.                                               ||
-## ||    5% completed, 0.4 mins elapsed, rate=166.5k reads per second            ||
-## ||   12% completed, 0.4 mins elapsed, rate=197.5k reads per second            ||
-## ||   18% completed, 0.4 mins elapsed, rate=209.9k reads per second            ||
-## ||   26% completed, 0.4 mins elapsed, rate=210.7k reads per second            ||
-## ||   32% completed, 0.4 mins elapsed, rate=214.1k reads per second            ||
-## ||   39% completed, 0.4 mins elapsed, rate=216.5k reads per second            ||
-## ||   45% completed, 0.4 mins elapsed, rate=219.6k reads per second            ||
-## ||   51% completed, 0.4 mins elapsed, rate=221.4k reads per second            ||
-## ||   59% completed, 0.5 mins elapsed, rate=223.1k reads per second            ||
-## ||   63% completed, 0.5 mins elapsed, rate=223.0k reads per second            ||
-## ||   70% completed, 0.5 mins elapsed, rate=12.8k reads per second             ||
-## ||   73% completed, 0.5 mins elapsed, rate=13.3k reads per second             ||
-## ||   76% completed, 0.5 mins elapsed, rate=13.9k reads per second             ||
-## ||   80% completed, 0.5 mins elapsed, rate=14.4k reads per second             ||
-## ||   82% completed, 0.5 mins elapsed, rate=14.7k reads per second             ||
-## ||   84% completed, 0.5 mins elapsed, rate=15.2k reads per second             ||
-## ||   87% completed, 0.5 mins elapsed, rate=15.6k reads per second             ||
-## ||   91% completed, 0.5 mins elapsed, rate=16.2k reads per second             ||
-## ||   94% completed, 0.5 mins elapsed, rate=16.8k reads per second             ||
-## ||   98% completed, 0.5 mins elapsed, rate=17.3k reads per second             ||
+## ||    5% completed, 0.4 mins elapsed, rate=196.0k reads per second            ||
+## ||   11% completed, 0.4 mins elapsed, rate=230.9k reads per second            ||
+## ||   18% completed, 0.4 mins elapsed, rate=242.9k reads per second            ||
+## ||   25% completed, 0.4 mins elapsed, rate=243.9k reads per second            ||
+## ||   32% completed, 0.4 mins elapsed, rate=246.4k reads per second            ||
+## ||   38% completed, 0.4 mins elapsed, rate=251.4k reads per second            ||
+## ||   45% completed, 0.4 mins elapsed, rate=252.2k reads per second            ||
+## ||   51% completed, 0.4 mins elapsed, rate=253.4k reads per second            ||
+## ||   58% completed, 0.4 mins elapsed, rate=255.6k reads per second            ||
+## ||   64% completed, 0.4 mins elapsed, rate=257.9k reads per second            ||
+## ||   69% completed, 0.4 mins elapsed, rate=15.2k reads per second             ||
+## ||   72% completed, 0.4 mins elapsed, rate=15.9k reads per second             ||
+## ||   76% completed, 0.4 mins elapsed, rate=16.6k reads per second             ||
+## ||   79% completed, 0.4 mins elapsed, rate=17.2k reads per second             ||
+## ||   82% completed, 0.4 mins elapsed, rate=17.8k reads per second             ||
+## ||   86% completed, 0.4 mins elapsed, rate=18.6k reads per second             ||
+## ||   90% completed, 0.4 mins elapsed, rate=19.3k reads per second             ||
+## ||   95% completed, 0.4 mins elapsed, rate=20.2k reads per second             ||
+## ||   97% completed, 0.4 mins elapsed, rate=20.7k reads per second             ||
 ## ||                                                                            ||
 ## ||                           Completed successfully.                          ||
 ## ||                                                                            ||
@@ -588,13 +599,15 @@ myMapped &lt;- align("GeCKO",myFQs,output_file = gsub(".fastq.gz",".bam",myFQs),
 ## ||                                                                            ||
 ## ||                      Indels : 0                                            ||
 ## ||                                                                            ||
-## ||                Running time : 0.5 minutes                                  ||
+## ||                Running time : 0.4 minutes                                  ||
 ## ||                                                                            ||
 ## \\============================================================================//
 ```
 
 ---
-## Rsubread ChIPseq alignment
+## Rsubread sgRNA alignment
+
+We can now assess how well our alignment has done by reviewing the total number of mapped reads output by the **align** function.
 
 
 ```r
@@ -612,11 +625,11 @@ myMapped
 ```
 
 ---
-## Rsubread ChIPseq alignment
+## Rsubread sgRNA alignment
 
-We can align our raw sequence data in fastQ format to the new FASTA file of our mm10 genome sequence using the **Rsubread** package. Specifically we will be using the **align** function as this utilizes the subread genomic alignment algorithm. 
+To see why we have been unable to map we can look at the Rsubread manual and review the [guide for mapping to miRNAs.](https://bioconductor.org/packages/release/bioc/vignettes/Rsubread/inst/doc/SubreadUsersGuide.pdf). 
 
-The [**align()** function accepts arguments for the index to align to, the fastQ to align, the name of output BAM, the mode of alignment (rna or dna) and the phredOffset.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/AlignmentInBioconductor.html#15)
+We can see here that the problem is that we need to reduce the number of subreads required for accepting a hit. We can control this with the **TH1** parameter which we now set ot 1.
 
 
 
@@ -655,7 +668,7 @@ myMapped &lt;- align("GeCKO",myFQs,output_file = gsub(".fastq.gz",".bam",myFQs),
 ## ||                                                                            ||
 ## \\============================================================================//
 ## 
-## //================= Running (24-Aug-2020 17:00:06, pid=6141) =================\\
+## //================= Running (25-Aug-2020 18:30:25, pid=6501) =================\\
 ## ||                                                                            ||
 ## || Check the input reads.                                                     ||
 ## || The input file contains base space reads.                                  ||
@@ -669,26 +682,26 @@ myMapped &lt;- align("GeCKO",myFQs,output_file = gsub(".fastq.gz",".bam",myFQs),
 ## || Load the 1-th index block...                                               ||
 ## || The index block has been loaded.                                           ||
 ## || Start read mapping in chunk.                                               ||
-## ||    5% completed, 0.4 mins elapsed, rate=179.6k reads per second            ||
-## ||   11% completed, 0.4 mins elapsed, rate=199.9k reads per second            ||
-## ||   17% completed, 0.4 mins elapsed, rate=212.0k reads per second            ||
-## ||   23% completed, 0.4 mins elapsed, rate=217.1k reads per second            ||
-## ||   30% completed, 0.4 mins elapsed, rate=218.9k reads per second            ||
-## ||   36% completed, 0.5 mins elapsed, rate=220.3k reads per second            ||
-## ||   43% completed, 0.5 mins elapsed, rate=222.9k reads per second            ||
-## ||   50% completed, 0.5 mins elapsed, rate=224.4k reads per second            ||
-## ||   56% completed, 0.5 mins elapsed, rate=224.5k reads per second            ||
-## ||   63% completed, 0.5 mins elapsed, rate=224.6k reads per second            ||
-## ||   70% completed, 0.5 mins elapsed, rate=12.5k reads per second             ||
-## ||   73% completed, 0.5 mins elapsed, rate=13.0k reads per second             ||
-## ||   76% completed, 0.5 mins elapsed, rate=13.4k reads per second             ||
-## ||   79% completed, 0.5 mins elapsed, rate=13.9k reads per second             ||
-## ||   83% completed, 0.5 mins elapsed, rate=14.4k reads per second             ||
-## ||   85% completed, 0.5 mins elapsed, rate=14.7k reads per second             ||
-## ||   88% completed, 0.5 mins elapsed, rate=15.1k reads per second             ||
-## ||   91% completed, 0.5 mins elapsed, rate=15.5k reads per second             ||
-## ||   95% completed, 0.5 mins elapsed, rate=16.0k reads per second             ||
-## ||   98% completed, 0.5 mins elapsed, rate=16.4k reads per second             ||
+## ||    5% completed, 0.3 mins elapsed, rate=188.3k reads per second            ||
+## ||   11% completed, 0.4 mins elapsed, rate=213.1k reads per second            ||
+## ||   17% completed, 0.4 mins elapsed, rate=223.4k reads per second            ||
+## ||   24% completed, 0.4 mins elapsed, rate=228.3k reads per second            ||
+## ||   31% completed, 0.4 mins elapsed, rate=228.7k reads per second            ||
+## ||   37% completed, 0.4 mins elapsed, rate=228.8k reads per second            ||
+## ||   44% completed, 0.4 mins elapsed, rate=230.7k reads per second            ||
+## ||   50% completed, 0.4 mins elapsed, rate=233.6k reads per second            ||
+## ||   57% completed, 0.4 mins elapsed, rate=234.3k reads per second            ||
+## ||   64% completed, 0.4 mins elapsed, rate=234.3k reads per second            ||
+## ||   70% completed, 0.4 mins elapsed, rate=15.5k reads per second             ||
+## ||   73% completed, 0.4 mins elapsed, rate=16.1k reads per second             ||
+## ||   76% completed, 0.4 mins elapsed, rate=16.7k reads per second             ||
+## ||   80% completed, 0.4 mins elapsed, rate=17.2k reads per second             ||
+## ||   83% completed, 0.4 mins elapsed, rate=17.8k reads per second             ||
+## ||   86% completed, 0.4 mins elapsed, rate=18.3k reads per second             ||
+## ||   90% completed, 0.4 mins elapsed, rate=18.8k reads per second             ||
+## ||   93% completed, 0.4 mins elapsed, rate=19.3k reads per second             ||
+## ||   96% completed, 0.4 mins elapsed, rate=19.9k reads per second             ||
+## ||   99% completed, 0.4 mins elapsed, rate=20.3k reads per second             ||
 ## ||                                                                            ||
 ## ||                           Completed successfully.                          ||
 ## ||                                                                            ||
@@ -705,13 +718,15 @@ myMapped &lt;- align("GeCKO",myFQs,output_file = gsub(".fastq.gz",".bam",myFQs),
 ## ||                                                                            ||
 ## ||                      Indels : 0                                            ||
 ## ||                                                                            ||
-## ||                Running time : 0.5 minutes                                  ||
+## ||                Running time : 0.4 minutes                                  ||
 ## ||                                                                            ||
 ## \\============================================================================//
 ```
 
 ---
-## Rsubread ChIPseq alignment
+## Rsubread sgRNA alignment
+
+We can now see we have mapped around 80% of the reads uniquely to sgRNA library.
 
 
 ```r
@@ -733,9 +748,7 @@ myMapped
 ---
 ## Rsubread ChIPseq alignment
 
-We can align our raw sequence data in fastQ format to the new FASTA file of our mm10 genome sequence using the **Rsubread** package. Specifically we will be using the **align** function as this utilizes the subread genomic alignment algorithm. 
-
-The [**align()** function accepts arguments for the index to align to, the fastQ to align, the name of output BAM, the mode of alignment (rna or dna) and the phredOffset.](https://rockefelleruniversity.github.io/Bioconductor_Introduction/presentations/slides/AlignmentInBioconductor.html#15)
+We will be more conservative now and exclude any reads with mismatches and indels (insertions/deletions) from our aligned data.
 
 
 
@@ -775,7 +788,7 @@ myMapped &lt;- align("GeCKO",myFQs,output_file = gsub(".fastq.gz",".bam",myFQs),
 ## ||                                                                            ||
 ## \\============================================================================//
 ## 
-## //================= Running (24-Aug-2020 17:00:37, pid=6141) =================\\
+## //================= Running (25-Aug-2020 18:30:50, pid=6501) =================\\
 ## ||                                                                            ||
 ## || Check the input reads.                                                     ||
 ## || The input file contains base space reads.                                  ||
@@ -789,24 +802,25 @@ myMapped &lt;- align("GeCKO",myFQs,output_file = gsub(".fastq.gz",".bam",myFQs),
 ## || Load the 1-th index block...                                               ||
 ## || The index block has been loaded.                                           ||
 ## || Start read mapping in chunk.                                               ||
-## ||    5% completed, 0.4 mins elapsed, rate=196.0k reads per second            ||
-## ||   12% completed, 0.4 mins elapsed, rate=210.2k reads per second            ||
-## ||   19% completed, 0.4 mins elapsed, rate=215.4k reads per second            ||
-## ||   26% completed, 0.4 mins elapsed, rate=217.5k reads per second            ||
-## ||   32% completed, 0.4 mins elapsed, rate=219.6k reads per second            ||
-## ||   39% completed, 0.4 mins elapsed, rate=220.1k reads per second            ||
-## ||   45% completed, 0.4 mins elapsed, rate=219.8k reads per second            ||
-## ||   54% completed, 0.4 mins elapsed, rate=219.7k reads per second            ||
-## ||   61% completed, 0.5 mins elapsed, rate=220.1k reads per second            ||
-## ||   69% completed, 0.5 mins elapsed, rate=12.6k reads per second             ||
-## ||   73% completed, 0.5 mins elapsed, rate=13.1k reads per second             ||
-## ||   77% completed, 0.5 mins elapsed, rate=13.7k reads per second             ||
-## ||   80% completed, 0.5 mins elapsed, rate=14.2k reads per second             ||
-## ||   83% completed, 0.5 mins elapsed, rate=14.6k reads per second             ||
-## ||   87% completed, 0.5 mins elapsed, rate=15.1k reads per second             ||
-## ||   89% completed, 0.5 mins elapsed, rate=15.4k reads per second             ||
-## ||   92% completed, 0.5 mins elapsed, rate=15.9k reads per second             ||
-## ||   96% completed, 0.5 mins elapsed, rate=16.3k reads per second             ||
+## ||    7% completed, 0.4 mins elapsed, rate=190.9k reads per second            ||
+## ||   15% completed, 0.4 mins elapsed, rate=213.4k reads per second            ||
+## ||   22% completed, 0.4 mins elapsed, rate=218.3k reads per second            ||
+## ||   29% completed, 0.4 mins elapsed, rate=220.6k reads per second            ||
+## ||   35% completed, 0.4 mins elapsed, rate=220.6k reads per second            ||
+## ||   42% completed, 0.4 mins elapsed, rate=221.4k reads per second            ||
+## ||   48% completed, 0.4 mins elapsed, rate=214.4k reads per second            ||
+## ||   54% completed, 0.4 mins elapsed, rate=215.5k reads per second            ||
+## ||   62% completed, 0.4 mins elapsed, rate=216.3k reads per second            ||
+## ||   69% completed, 0.4 mins elapsed, rate=14.5k reads per second             ||
+## ||   73% completed, 0.4 mins elapsed, rate=15.1k reads per second             ||
+## ||   76% completed, 0.4 mins elapsed, rate=15.7k reads per second             ||
+## ||   79% completed, 0.4 mins elapsed, rate=16.2k reads per second             ||
+## ||   83% completed, 0.4 mins elapsed, rate=16.7k reads per second             ||
+## ||   86% completed, 0.4 mins elapsed, rate=17.2k reads per second             ||
+## ||   89% completed, 0.4 mins elapsed, rate=17.7k reads per second             ||
+## ||   93% completed, 0.4 mins elapsed, rate=18.3k reads per second             ||
+## ||   96% completed, 0.4 mins elapsed, rate=18.8k reads per second             ||
+## ||   98% completed, 0.4 mins elapsed, rate=19.1k reads per second             ||
 ## ||                                                                            ||
 ## ||                           Completed successfully.                          ||
 ## ||                                                                            ||
@@ -823,16 +837,40 @@ myMapped &lt;- align("GeCKO",myFQs,output_file = gsub(".fastq.gz",".bam",myFQs),
 ## ||                                                                            ||
 ## ||                      Indels : 0                                            ||
 ## ||                                                                            ||
-## ||                Running time : 0.5 minutes                                  ||
+## ||                Running time : 0.4 minutes                                  ||
 ## ||                                                                            ||
 ## \\============================================================================//
 ```
 
 ---
-## Rsubread aligned data
+## Rsubread sgRNA alignment
+
+With a little more stringency we have expected less alignment. This alignment rate is in keeping with observed results from the PinAPL-Py.
 
 
 ```r
+myMapped 
+```
+
+```
+##                       Control_R1_S14_L008_R1_001_x.bam
+## Total_reads                                     500000
+## Mapped_reads                                    413480
+## Uniquely_mapped_reads                           413480
+## Multi_mapping_reads                                  0
+## Unmapped_reads                                   86520
+## Indels                                               0
+```
+
+
+---
+## Rsubread sgRNA aligned data
+
+We can use the **GenoomicAlignments** package to read in our newly created BAM file using the **readGAlignments** function. 
+
+
+```r
+require(GenomicAlignments)
 temp &lt;- readGAlignments(gsub(".fastq.gz",".bam",myFQs))
 temp
 ```
@@ -841,83 +879,204 @@ temp
 ## GAlignments object with 413480 alignments and 0 metadata columns:
 ##                seqnames strand       cigar    qwidth     start       end
 ##                   &lt;Rle&gt;  &lt;Rle&gt; &lt;character&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;
-##        [1] HGLibA_28034      +    29S20M1S        50         1        20
-##        [2] HGLibA_47294      +    29S20M1S        50         1        20
-##        [3] HGLibB_48743      +    29S20M1S        50         1        20
-##        [4] HGLibA_43174      +    29S19M2S        50         1        19
-##        [5] HGLibA_40957      +    29S19M2S        50         1        19
+##        [1] HGLibB_08643      +    29S20M1S        50         1        20
+##        [2] HGLibA_47249      +    29S19M2S        50         1        19
+##        [3] HGLibB_55658      +    29S19M2S        50         1        19
+##        [4] HGLibA_20205      +    29S20M1S        50         1        20
+##        [5] HGLibB_32397      +    29S20M1S        50         1        20
 ##        ...          ...    ...         ...       ...       ...       ...
-##   [413476] HGLibB_34400      +    29S20M1S        50         1        20
-##   [413477] HGLibA_56072      +    29S19M2S        50         1        19
-##   [413478] HGLibA_28394      +    29S20M1S        50         1        20
-##   [413479] HGLibA_08873      +    29S20M1S        50         1        20
-##   [413480] HGLibB_53609      +    29S20M1S        50         1        20
+##   [413476] HGLibA_35013      +    29S19M2S        50         1        19
+##   [413477] HGLibB_08748      +    29S20M1S        50         1        20
+##   [413478] HGLibA_23475      +    29S19M2S        50         1        19
+##   [413479] HGLibB_55809      +    29S19M2S        50         1        19
+##   [413480] HGLibA_62676      +    29S20M1S        50         1        20
 ##                width     njunc
 ##            &lt;integer&gt; &lt;integer&gt;
 ##        [1]        20         0
-##        [2]        20         0
-##        [3]        20         0
-##        [4]        19         0
-##        [5]        19         0
+##        [2]        19         0
+##        [3]        19         0
+##        [4]        20         0
+##        [5]        20         0
 ##        ...       ...       ...
-##   [413476]        20         0
-##   [413477]        19         0
-##   [413478]        20         0
-##   [413479]        20         0
+##   [413476]        19         0
+##   [413477]        20         0
+##   [413478]        19         0
+##   [413479]        19         0
 ##   [413480]        20         0
 ##   -------
 ##   seqinfo: 122411 sequences from an unspecified genome
 ```
 
-
 ---
-## Rsubread aligned data
+## Rsubread sgRNA aligned data
+
+Now we can review the alignments we can see how Rsubread has dealt with read sequences longer than the sgRNA to align to.
+
+As we can see in the cigar strings, subread has softcliped the start and end of reads around the point of alignment and so removed adaptors as part of alignment.
 
 
 ```r
-table(grepl("29S20M1S",temp@cigar))
+temp
 ```
 
 ```
-## 
-##  FALSE   TRUE 
-## 106622 306858
-```
-
-```r
-temp &lt;- temp[grepl("29S20M1S",temp@cigar)]
-
-# temp data.frame(table(seqnames(temp[width(temp) == "20"])),row.names = "Var1")
+## GAlignments object with 413480 alignments and 0 metadata columns:
+##                seqnames strand       cigar    qwidth     start       end
+##                   &lt;Rle&gt;  &lt;Rle&gt; &lt;character&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;
+##        [1] HGLibB_08643      +    29S20M1S        50         1        20
+##        [2] HGLibA_47249      +    29S19M2S        50         1        19
+##        [3] HGLibB_55658      +    29S19M2S        50         1        19
+##        [4] HGLibA_20205      +    29S20M1S        50         1        20
+##        [5] HGLibB_32397      +    29S20M1S        50         1        20
+##        ...          ...    ...         ...       ...       ...       ...
+##   [413476] HGLibA_35013      +    29S19M2S        50         1        19
+##   [413477] HGLibB_08748      +    29S20M1S        50         1        20
+##   [413478] HGLibA_23475      +    29S19M2S        50         1        19
+##   [413479] HGLibB_55809      +    29S19M2S        50         1        19
+##   [413480] HGLibA_62676      +    29S20M1S        50         1        20
+##                width     njunc
+##            &lt;integer&gt; &lt;integer&gt;
+##        [1]        20         0
+##        [2]        19         0
+##        [3]        19         0
+##        [4]        20         0
+##        [5]        20         0
+##        ...       ...       ...
+##   [413476]        19         0
+##   [413477]        20         0
+##   [413478]        19         0
+##   [413479]        19         0
+##   [413480]        20         0
+##   -------
+##   seqinfo: 122411 sequences from an unspecified genome
 ```
 
 ---
-## Rsubread aligned data
+## Rsubread sgRNA aligned data
+
+We can then review where the softclipping and matches occur in our read by interrogating these cigar strings using the **cigar** functions to extract them from our GAlignements object.
+
+
+```r
+cigars &lt;- cigar(temp)
+cigars[1:5]
+```
+
+```
+## [1] "29S20M1S" "29S19M2S" "29S19M2S" "29S20M1S" "29S20M1S"
+```
+
+---
+## Rsubread sgRNA aligned data
+
+We can use the **cigarToRleList** function to turn our cigar strings into a list of RLE objects.
+
+
+```r
+cigarRLE &lt;- cigarToRleList(cigars)
+cigarRLE[1]
+```
+
+```
+## RleList of length 1
+## [[1]]
+## character-Rle of length 50 with 3 runs
+##   Lengths:  29  20   1
+##   Values : "S" "M" "S"
+```
+
+---
+## Rsubread sgRNA aligned data
+
+And as our reads are all the same length we can now turn our list of RLEs into a matrix of cigar values with rows representing reads and columns the cycles acorss the reads.
+
+
+```r
+cigarMat &lt;- matrix(as.vector(unlist(cigarRLE)),ncol=50,byrow = TRUE)
+cigarMat[1:2,]
+```
+
+```
+##      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11] [,12] [,13] [,14]
+## [1,] "S"  "S"  "S"  "S"  "S"  "S"  "S"  "S"  "S"  "S"   "S"   "S"   "S"   "S"  
+## [2,] "S"  "S"  "S"  "S"  "S"  "S"  "S"  "S"  "S"  "S"   "S"   "S"   "S"   "S"  
+##      [,15] [,16] [,17] [,18] [,19] [,20] [,21] [,22] [,23] [,24] [,25] [,26]
+## [1,] "S"   "S"   "S"   "S"   "S"   "S"   "S"   "S"   "S"   "S"   "S"   "S"  
+## [2,] "S"   "S"   "S"   "S"   "S"   "S"   "S"   "S"   "S"   "S"   "S"   "S"  
+##      [,27] [,28] [,29] [,30] [,31] [,32] [,33] [,34] [,35] [,36] [,37] [,38]
+## [1,] "S"   "S"   "S"   "M"   "M"   "M"   "M"   "M"   "M"   "M"   "M"   "M"  
+## [2,] "S"   "S"   "S"   "M"   "M"   "M"   "M"   "M"   "M"   "M"   "M"   "M"  
+##      [,39] [,40] [,41] [,42] [,43] [,44] [,45] [,46] [,47] [,48] [,49] [,50]
+## [1,] "M"   "M"   "M"   "M"   "M"   "M"   "M"   "M"   "M"   "M"   "M"   "S"  
+## [2,] "M"   "M"   "M"   "M"   "M"   "M"   "M"   "M"   "M"   "M"   "S"   "S"
+```
+
+---
+## Rsubread sgRNA aligned data
+
+From this we can now get the frequency of S or M using the table function.
+
+
+```r
+cigarFreq &lt;- apply(cigarMat,2,table)
+cigarFreq[1:2,]
+```
+
+```
+##     [,1]   [,2]   [,3]   [,4]   [,5]   [,6]   [,7]   [,8]   [,9]  [,10]  [,11]
+## M     41    699    824    867    868    868    873    878    878    878    878
+## S 413439 412781 412656 412613 412612 412612 412607 412602 412602 412602 412602
+##    [,12]  [,13]  [,14]  [,15]  [,16]  [,17]  [,18]  [,19]  [,20]  [,21]  [,22]
+## M    880    880    881    902    905    883    883    882    835    767    120
+## S 412600 412600 412599 412578 412575 412597 412597 412598 412645 412713 413360
+##    [,23]  [,24]  [,25]  [,26]  [,27]  [,28]  [,29]  [,30]  [,31]  [,32]  [,33]
+## M     61     44     51    123    972   2672  31947 405383 411237 411654 412178
+## S 413419 413436 413429 413357 412508 410808 381533   8097   2243   1826   1302
+##    [,34]  [,35]  [,36]  [,37]  [,38]  [,39]  [,40]  [,41]  [,42]  [,43]  [,44]
+## M 412575 412575 412575 412574 412574 412572 412571 412571 412562 412555 412547
+## S    905    905    905    906    906    908    909    909    918    925    933
+##    [,45]  [,46]  [,47]  [,48]  [,49]  [,50]
+## M 412532 412335 409707 403963 312939   2308
+## S    948   1145   3773   9517 100541 411172
+```
+
+---
+## Rsubread sgRNA aligned data
+
+With this frequency table we can construct a ggplot to show the distibution of soft-clips and matches across the read.
+
+
+```r
+require(ggplot2)
+toPlot &lt;- data.frame(Freq=c(cigarFreq["S",],cigarFreq["M",]),
+                      Cigar=rep(c("S","M"),each=ncol(cigarFreq)),
+                      Cycle=rep(seq(1,ncol(cigarFreq)),2))
+ggplot(toPlot,aes(x=Cycle,y=Freq,colour=Cigar))+geom_line()+theme_bw()
+```
+
+![](crisprscreen_files/figure-html/unnamed-chunk-17-1.png)&lt;!-- --&gt;
+
+---
+## Rsubread counts per sgRNA
+
+To obtain the counts per sgRNA we can simply take the frequncy of contig occurrence. 
 
 
 ```r
 counts &lt;- data.frame(table(seqnames(temp)),row.names = "Var1")
-counts &lt;- data.frame(table(seqnames(temp[width(temp) == "20"])),row.names = "Var1")
 counts[1:2,,drop=FALSE]
 ```
 
 ```
 ##              Freq
 ## HGLibA_00001    0
-## HGLibA_00002    0
+## HGLibA_00002    1
 ```
 
 ---
-## Rsubread aligned data
+## Rsubread counts per sgRNA
 
-
-```r
-download.file("http://pinapl-py.ucsd.edu/run/download/example-run","Results.zip")
-unzip("Results.zip")
-```
-
-
----
-## Rsubread aligned data
+We can now compare to the counts from the same file retreived from PinAPL-Py.
 
 
 ```r
@@ -926,14 +1085,288 @@ new &lt;- merge(ss,counts,by.x=1,by.y=0)
 plot(new$X0,new$Freq)
 ```
 
-![](crisprscreen_files/figure-html/unnamed-chunk-14-1.png)&lt;!-- --&gt;
+![](crisprscreen_files/figure-html/unnamed-chunk-19-1.png)&lt;!-- --&gt;
+
+---
+## Rsubread counts per sgRNA
+
+This looked quite different for low counts. We will also add 1 more additional filter to screen out reads with less than 20 matches.
+
+
+```r
+counts &lt;- data.frame(table(seqnames(temp[width(temp) == 20])),row.names = "Var1")
+new &lt;- merge(ss,counts,by.x=1,by.y=0)
+plot(new$X0,new$Freq)
+```
+
+![](crisprscreen_files/figure-html/unnamed-chunk-20-1.png)&lt;!-- --&gt;
+
+
+
+---
+## Rsubread counts per sgRNA
+
+Now we can align the reads and count sgRNAs we could run the counting over each of our files of interest. I have done this already and provide a solution in the exercises based on the previous slides. 
+
+For now we can work with the result stored in a matrix object called **sgRNAcounts**.
+
+
+```r
+load("data/sgRNACounts.RData")
+sgRNAcounts[1:4,]
+```
+
+```
+##              Control_1 Control_2 ToxB_1 ToxB_2
+## HGLibA_00001         0         7      2      8
+## HGLibA_00002         0         0      0      0
+## HGLibA_00003         1         0      0      0
+## HGLibA_00004         9         0      0      1
+```
+
+---
+## Rsubread counts per sgRNA
+
+To normalise our data and test for enrichment we will use the DESeq2 package. 
+
+First we need to constuct our DESeqDataset object using familiar **DESeqDataSetFromMatrix** function
+
+
+```r
+library(DESeq2)
+metadata &lt;- DataFrame(Group=factor(c("Control","Control","ToxB","ToxB"),
+                                   levels = c("Control","ToxB")),
+                      row.names = colnames(sgRNAcounts))
+dds &lt;- DESeqDataSetFromMatrix(sgRNAcounts,colData = metadata,design = ~Group)
+```
+
+---
+## Rsubread counts per sgRNA
+
+Now we have our DESeqDataset object we can use the DESeq function to normalise and test for enrichment.
+
+
+```r
+dds &lt;- DESeq(dds)
+```
+
+```
+## estimating size factors
+```
+
+```
+## estimating dispersions
+```
+
+```
+## gene-wise dispersion estimates
+```
+
+```
+## mean-dispersion relationship
+```
+
+```
+## final dispersion estimates
+```
+
+```
+## fitting model and testing
+```
+
+---
+## Rsubread counts per sgRNA
+
+A useful QC with sgRNA enrichment analysis is to review the distribution of counts for sgRNA guides before and after treatment. Here we extract the normalised counts and plot the distbutions of log2 counts for sgRNAs as a boxplot.
+
+
+```r
+normCounts &lt;- counts(dds,normalized=TRUE)
+boxplot(log2(normCounts+0.1))
+```
+
+![](crisprscreen_files/figure-html/unnamed-chunk-24-1.png)&lt;!-- --&gt;
+
+
+---
+## Rsubread counts per sgRNA
+
+To identify sgRNAs enriched in our Tox condition we can now use the standard differential analysis of DESeq2 by way of the **results** function.
+
+
+```r
+ToxBvsControl &lt;- results(dds,contrast=c("Group","ToxB","Control"))
+ToxBvsControl &lt;- ToxBvsControl[order(ToxBvsControl$pvalue),]
+ToxBvsControl
+```
+
+```
+## log2 fold change (MLE): Group ToxB vs Control 
+## Wald test p-value: Group ToxB vs Control 
+## DataFrame with 122411 rows and 6 columns
+##               baseMean log2FoldChange     lfcSE      stat      pvalue
+##              &lt;numeric&gt;      &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;   &lt;numeric&gt;
+## HGLibA_02011  2269.551       11.02447   1.84655   5.97030 2.36814e-09
+## HGLibA_64400   572.199       12.78926   2.38743   5.35691 8.46576e-08
+## HGLibB_02299  2910.432        9.46052   1.77452   5.33132 9.75036e-08
+## HGLibA_39135  1804.121       10.44016   2.00996   5.19422 2.05577e-07
+## HGLibB_51676  2751.242        9.63231   1.86532   5.16390 2.41858e-07
+## ...                ...            ...       ...       ...         ...
+## HGLibB_57015         0             NA        NA        NA          NA
+## HGLibB_57016         0             NA        NA        NA          NA
+## HGLibB_57019         0             NA        NA        NA          NA
+## HGLibB_57021         0             NA        NA        NA          NA
+## HGLibB_57026         0             NA        NA        NA          NA
+##                     padj
+##                &lt;numeric&gt;
+## HGLibA_02011 3.09658e-05
+## HGLibA_64400 4.24986e-04
+## HGLibB_02299 4.24986e-04
+## HGLibA_39135 6.32506e-04
+## HGLibB_51676 6.32506e-04
+## ...                  ...
+## HGLibB_57015          NA
+## HGLibB_57016          NA
+## HGLibB_57019          NA
+## HGLibB_57021          NA
+## HGLibB_57026          NA
+```
+
+
+---
+## Rsubread counts per sgRNA
+
+We can now compare our results to those provided by PinAPL-py. Although there us some differences the correlation here is 99%.
+
+
+```r
+ss &lt;- read.delim("New_Example_1580342908_4/Analysis/02_sgRNA-Ranking_Results/sgRNA_Rankings/ToxB_avg_0.01_Sidak_sgRNAList.txt")
+toPlt &lt;- merge(ss,as.data.frame(ToxBvsControl),by.x=1,by.y=0)
+corr &lt;- cor(log2(toPlt[!is.na(toPlt$padj),]$fold.change),toPlt[!is.na(toPlt$padj),]$log2FoldChange)
+plot(log2(toPlt[!is.na(toPlt$padj),]$fold.change),toPlt[!is.na(toPlt$padj),]$log2FoldChange,main=corr)
+```
+
+![](crisprscreen_files/figure-html/unnamed-chunk-26-1.png)&lt;!-- --&gt;
+
+---
+## sgRNA to Gene
+
+We now would want to identify genes whose sgRNAs are enriched. Most sgRNA libraries will have multiple sgRNA guides for a single gene and so we can use makes use of these in selected genes of interest.
+
+Two main approaches are to either set a cut-off for number of enriched sgRNAs per gene or to produce an aggregate score of sgRNAs for a gene. 
+
+Here we will employ the first strategy.
+
+
+---
+## sgRNA to Gene
+
+We can first identify which sgRNAs were significantly enriched in ToxB.
+
+
+
+```r
+ToxBvsControl &lt;- as.data.frame(ToxBvsControl)[order(ToxBvsControl$pvalue),]
+ToxBvsControl$Enriched &lt;- !is.na(ToxBvsControl$padj) &amp; ToxBvsControl$pvalue &lt; 0.05 &amp;ToxBvsControl$log2FoldChange &gt; 0
+ToxBvsControl[1:2,]
+```
+
+```
+##               baseMean log2FoldChange    lfcSE     stat       pvalue
+## HGLibA_02011 2269.5511       11.02447 1.846551 5.970302 2.368142e-09
+## HGLibA_64400  572.1991       12.78926 2.387432 5.356909 8.465756e-08
+##                      padj Enriched
+## HGLibA_02011 3.096583e-05     TRUE
+## HGLibA_64400 4.249859e-04     TRUE
+```
+
+---
+## sgRNA to Gene
+
+We also need to add some information of sgRNA to gene. This is available in the same file containing the sequence information.
+
+
+```r
+ToxBvsControl &lt;- merge(GeCKO,ToxBvsControl,by.x=2,by.y=0)
+ToxBvsControl[1:2,]
+```
+
+```
+##            UID gene_id                  seq baseMean log2FoldChange    lfcSE
+## 1 HGLibA_00001    A1BG GTCGCTGAGCTCCGATTCGA 4.588529       1.022701 2.679293
+## 2 HGLibA_00002    A1BG ACCTGTAGTTGCCGGCGTGC 0.000000             NA       NA
+##        stat    pvalue      padj Enriched
+## 1 0.3817054 0.7026799 0.8083972    FALSE
+## 2        NA        NA        NA    FALSE
+```
+
+---
+## sgRNA to Gene
+
+We can now loop through our sgRNA results and summarise to the gene level.
+
+
+```r
+genes &lt;- unique(ToxBvsControl$gene_id)
+listofGene &lt;- list()
+for(i in 1:length(genes)){
+  tempRes &lt;- ToxBvsControl[ToxBvsControl$gene_id %in% genes[i],]
+  meanLogFC &lt;- mean(tempRes$log2FoldChange,na.rm=TRUE)
+  logFCs &lt;- paste0(tempRes$log2FoldChange,collapse=";")
+  minPvalue &lt;- min(tempRes$pvalue,na.rm=TRUE) 
+  pvalues &lt;- paste0(tempRes$pvalue,collapse=";")
+  nEnriched &lt;- sum(tempRes$Enriched,na.rm=TRUE) 
+  listofGene[[i]] &lt;- data.frame(Gene=genes[i],meanLogFC,logFCs,minPvalue,pvalues,nEnriched)
+}
+geneTable &lt;- do.call(rbind,listofGene)
+geneTable &lt;- geneTable[order(geneTable$nEnriched,decreasing=TRUE),]
+```
+
+---
+## sgRNA to Gene
+
+Finally we can set a cut-off of enrichment by at least two guides and select genes to investigate further.
+
+
+
+
+```r
+geneTable[1:3,]
+```
+
+```
+##        Gene meanLogFC
+## 329   HBEGF 3.4286182
+## 17   CPSF3L 0.9897694
+## 28  PIP5K1B 3.2540767
+##                                                                                                        logFCs
+## 329  5.91201414165886;5.94417514624874;4.87849538275283;5.55277593166671;-0.704130722997228;-1.01162051433903
+## 17  11.4822538345679;6.51040028627386;-5.94602232979228;-2.59617588084159;-2.57900317698969;-0.93283644538519
+## 28                                 9.23864163813939;4.54175883040469;-5.10566945641389;4.34157590463247;NA;NA
+##        minPvalue
+## 329 1.515112e-03
+## 17  1.616409e-06
+## 28  4.500310e-06
+##                                                                                                               pvalues
+## 329 0.00151511233063106;0.00364650882426901;0.0196783715509742;0.0289925243536325;0.800810984608005;0.839540034529576
+## 17  1.61640923806389e-06;0.00736461379039227;0.0382497535051929;0.592989202271584;0.595502117574694;0.730750118602134
+## 28                                  4.50030988059637e-06;0.018688113990729;0.0978052274147489;0.122899091425096;NA;NA
+##     nEnriched
+## 329         4
+## 17          2
+## 28          2
+```
+
+
+
+
 
 ---
 # Time for an exercise.
 
-[Link_to_exercises](../../exercises/exercises/alignedData_exercise.html)
+[Link_to_exercises](../../exercises/exercises/crispr_exercise.html)
 
-[Link_to_answers](../../exercises/answers/alignedData_answers.html)
+[Link_to_answers](../../exercises/answers/crisp_answers.html)
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>

@@ -197,6 +197,98 @@ window.buildTabsets = function(tocID) {
 </script>
 
 
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  background-color: #f8f8f8; }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #c4a000; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #000000; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #000000; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #000000; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
 
 
 <style type="text/css">
@@ -342,9 +434,41 @@ summary {
 
 
 <p>*1 In this exercise set we will re-analyse the test data from <strong>pinapl-py</strong>. If you havent already downlaoded it then download now and unzip them</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">download.file</span>(<span class="st">&quot;https://github.com/LewisLabUCSD/PinAPL-Py/archive/master.zip&quot;</span>,<span class="st">&quot;pieappleData.zip&quot;</span>)</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="kw">unzip</span>(<span class="st">&quot;pieappleData.zip&quot;</span>)</span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="kw">download.file</span>(<span class="st">&quot;http://pinapl-py.ucsd.edu/example-data&quot;</span>,<span class="st">&quot;TestData.zip&quot;</span>)</span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="kw">unzip</span>(<span class="st">&quot;TestData.zip&quot;</span>)</span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="kw">download.file</span>(<span class="st">&quot;http://pinapl-py.ucsd.edu/run/download/example-run&quot;</span>,<span class="st">&quot;Results.zip&quot;</span>)</span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="kw">unzip</span>(<span class="st">&quot;Results.zip&quot;</span>)</span></code></pre></div>
 <p>*2 Create an Rsubread index of sgRNA library</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>myData &lt;-<span class="st"> </span><span class="kw">read.delim</span>(<span class="st">&quot;PinAPL-py_demo_data/GeCKOv21_Human.tsv&quot;</span>,<span class="dt">sep=</span><span class="st">&quot;</span><span class="ch">\t</span><span class="st">&quot;</span>)</span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="kw">require</span>(Biostrings)</span>
+<span id="cb2-3"><a href="#cb2-3"></a>sgRNALib &lt;-<span class="st"> </span><span class="kw">DNAStringSet</span>(myData<span class="op">$</span>seq)</span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="kw">names</span>(sgRNALib) &lt;-<span class="st"> </span>myData<span class="op">$</span>UID</span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="kw">require</span>(Rsubread)</span>
+<span id="cb2-6"><a href="#cb2-6"></a><span class="kw">writeXStringSet</span>(sgRNALib,<span class="st">&quot;sgRNALib.fa&quot;</span>)</span>
+<span id="cb2-7"><a href="#cb2-7"></a><span class="kw">buildindex</span>(<span class="st">&quot;sgRNALib&quot;</span>,<span class="dt">reference =</span> <span class="st">&quot;sgRNALib.fa&quot;</span>)</span></code></pre></div>
 <p>*3 Create a count matrix of sgRNAs across all samples.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>myFQs &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;PinAPL-py_demo_data/Control_R1_S14_L008_R1_001_x.fastq.gz&quot;</span>, <span class="st">&quot;PinAPL-py_demo_data/Control_R2_S15_L008_R1_001_x.fastq.gz&quot;</span>, <span class="st">&quot;PinAPL-py_demo_data/ToxA_R1_98_S2_L008_R1_001_x.fastq.gz&quot;</span>, <span class="st">&quot;PinAPL-py_demo_data/ToxA_R2_S2_L005_R1_001_x.fastq.gz&quot;</span>, <span class="st">&quot;PinAPL-py_demo_data/ToxB_R1_98_S4_L008_R1_001_x.fastq.gz&quot;</span>, <span class="st">&quot;PinAPL-py_demo_data/ToxB_R2_S4_L005_R1_001_x.fastq.gz&quot;</span>)</span>
+<span id="cb3-2"><a href="#cb3-2"></a><span class="kw">require</span>(GenomicAlignments)</span>
+<span id="cb3-3"><a href="#cb3-3"></a>counts &lt;-<span class="st"> </span><span class="kw">list</span>()</span>
+<span id="cb3-4"><a href="#cb3-4"></a>stats &lt;-<span class="st"> </span><span class="kw">list</span>()</span>
+<span id="cb3-5"><a href="#cb3-5"></a></span>
+<span id="cb3-6"><a href="#cb3-6"></a><span class="cf">for</span>(f <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw">length</span>(myFQs)){</span>
+<span id="cb3-7"><a href="#cb3-7"></a>  stats[[f]] &lt;-<span class="st"> </span><span class="kw">align</span>(<span class="st">&quot;sgRNALib&quot;</span>,myFQs[f],<span class="dt">output_file =</span> <span class="kw">gsub</span>(<span class="st">&quot;.fastq.gz&quot;</span>,<span class="st">&quot;.bam&quot;</span>,myFQs[f]),</span>
+<span id="cb3-8"><a href="#cb3-8"></a>            <span class="dt">nthreads=</span><span class="dv">2</span>,<span class="dt">unique=</span><span class="ot">TRUE</span>,<span class="dt">nBestLocations=</span><span class="dv">1</span>,<span class="dt">type =</span> <span class="st">&quot;DNA&quot;</span>,<span class="dt">TH1 =</span> <span class="dv">1</span>,<span class="dt">maxMismatches =</span> <span class="dv">0</span>,<span class="dt">indels =</span> <span class="dv">0</span>)</span>
+<span id="cb3-9"><a href="#cb3-9"></a>  temp &lt;-<span class="st"> </span><span class="kw">readGAlignments</span>(<span class="kw">gsub</span>(<span class="st">&quot;.fastq.gz&quot;</span>,<span class="st">&quot;.bam&quot;</span>,myFQs[f]))</span>
+<span id="cb3-10"><a href="#cb3-10"></a>  counts[[f]] &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="kw">table</span>(<span class="kw">seqnames</span>(temp[<span class="kw">width</span>(temp) <span class="op">==</span><span class="st"> &quot;20&quot;</span>])),<span class="dt">row.names =</span> <span class="st">&quot;Var1&quot;</span>)</span>
+<span id="cb3-11"><a href="#cb3-11"></a>}</span>
+<span id="cb3-12"><a href="#cb3-12"></a>myRes &lt;-<span class="st"> </span><span class="kw">do.call</span>(cbind,counts)</span></code></pre></div>
 <p>*4 Identify sgRNAs enriched in ToxA versus Control</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">colnames</span>(myRes) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;Control_1&quot;</span>,<span class="st">&quot;Control_2&quot;</span>,<span class="st">&quot;ToxA_1&quot;</span>,<span class="st">&quot;ToxA_2&quot;</span>,<span class="st">&quot;ToxB_1&quot;</span>,<span class="st">&quot;ToxB_2&quot;</span>)</span>
+<span id="cb4-2"><a href="#cb4-2"></a>toUseAsCol &lt;-<span class="st"> </span><span class="kw">DataFrame</span>(<span class="dt">Group=</span><span class="kw">factor</span>(<span class="kw">c</span>(<span class="st">&quot;Control&quot;</span>,<span class="st">&quot;Control&quot;</span>,<span class="st">&quot;ToxA&quot;</span>,<span class="st">&quot;ToxA&quot;</span>,<span class="st">&quot;ToxB&quot;</span>,<span class="st">&quot;ToxB&quot;</span>),<span class="dt">levels =</span> <span class="kw">c</span>(<span class="st">&quot;Control&quot;</span>,<span class="st">&quot;ToxA&quot;</span>,<span class="st">&quot;ToxB&quot;</span>)),<span class="dt">row.names =</span> <span class="kw">colnames</span>(myRes))</span>
+<span id="cb4-3"><a href="#cb4-3"></a><span class="kw">require</span>(DESeq2)</span>
+<span id="cb4-4"><a href="#cb4-4"></a>dds &lt;-<span class="st"> </span><span class="kw">DESeqDataSetFromMatrix</span>(myRes,<span class="dt">colData =</span> toUseAsCol,<span class="dt">design =</span> <span class="op">~</span>Group)</span>
+<span id="cb4-5"><a href="#cb4-5"></a>dds &lt;-<span class="st"> </span><span class="kw">DESeq</span>(dds)</span>
+<span id="cb4-6"><a href="#cb4-6"></a>ToxAvsControl &lt;-<span class="st"> </span><span class="kw">results</span>(dds,<span class="dt">contrast=</span><span class="kw">c</span>(<span class="st">&quot;Group&quot;</span>,<span class="st">&quot;ToxA&quot;</span>,<span class="st">&quot;Control&quot;</span>))</span>
+<span id="cb4-7"><a href="#cb4-7"></a>ToxAvsControl[<span class="kw">order</span>(ToxAvsControl<span class="op">$</span>pvalue),]</span></code></pre></div>
 
 
 

@@ -16,12 +16,12 @@ navbar:
         href: presentations/r_code/crisprscreen.R
   - text: Exercises
     menu:
-    - text: Test
+    - text: crispr
       menu:
       - text: Exercise
-        href: exercises/exercises/Test_exercise.html
+        href: exercises/exercises/crispr_exercise.html
       - text: Solution
-        href: exercises/answers/Test_answers.html
+        href: exercises/answers/crispr_answers.html
   right:
   - text: Getting help!
     href: https://github.com//RockefellerUniversity/RU_CrisprScreen/issues
